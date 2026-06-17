@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@charlie404/filemanager — vanilla example</title>
+    <style>
+      :root {
+        /* The element reads daisyUI-style tokens when present and falls back to
+           sensible defaults otherwise. These plain CSS variables are enough. */
+        --color-base-100: #ffffff;
+        --color-base-200: #f6f6f8;
+        --color-base-300: #e8e8ee;
+        --color-base-content: #1f2430;
+        --color-primary: #2563eb;
+        --color-primary-content: #ffffff;
+        --color-error: #dc2626;
+        --radius-box: 0.9rem;
+        --radius-field: 0.5rem;
+        color-scheme: light;
+      }
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        background: var(--color-base-200);
+        color: var(--color-base-content);
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 5rem;
+      }
+      h1 {
+        font-size: 1.3rem;
+      }
+      p.lead {
+        opacity: 0.75;
+        font-size: 0.9rem;
+      }
+      .card {
+        background: var(--color-base-100);
+        border: 1px solid var(--color-base-300);
+        border-radius: var(--radius-box);
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+      }
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        font-size: 0.9rem;
+      }
+      .row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      .field-input {
+        flex: 1;
+        padding: 0.5rem 0.7rem;
+        border: 1px solid var(--color-base-300);
+        border-radius: var(--radius-field);
+        background: var(--color-base-100);
+        color: inherit;
+        font: inherit;
+      }
+      button.app {
+        font: inherit;
+        padding: 0.5rem 0.8rem;
+        border: 1px solid var(--color-base-300);
+        border-radius: var(--radius-field);
+        background: var(--color-primary);
+        color: var(--color-primary-content);
+        cursor: pointer;
+      }
+      code {
+        background: var(--color-base-300);
+        padding: 0.1rem 0.3rem;
+        border-radius: 4px;
+        font-size: 0.85em;
+      }
+      pre {
+        background: var(--color-base-300);
+        padding: 0.6rem;
+        border-radius: var(--radius-field);
+        overflow: auto;
+        font-size: 0.8rem;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>@charlie404/filemanager — vanilla example</h1>
+      <p class="lead">
+        A static page + a single-file PHP backend. No framework, no build step.
+        Served entirely by <code>php -S localhost:8000 api.php</code>.
+      </p>
+
+      <!-- Single-value field: a text input + an auto-injected browse button.
+           Picking a file writes its url into the input. -->
+      <div class="card">
+        <label for="image">Single image — <code>data-filemanager</code></label>
+        <div class="row">
+          <input
+            id="image"
+            class="field-input"
+            type="text"
+            name="image"
+            data-filemanager
+            data-filemanager-accept="image/*"
+            data-filemanager-crop-ratio="16:9"
+            placeholder="No image selected"
+          />
+        </div>
+      </div>
+
+      <!-- Multiple-value field: chips that submit repeated `gallery[]` inputs. -->
+      <div class="card">
+        <label
+          >Gallery — <code>data-filemanager-multiple</code> (submits
+          <code>gallery[]</code>)</label
+        >
+        <input
+          type="hidden"
+          name="gallery"
+          data-filemanager
+          data-filemanager-multiple
+          data-filemanager-accept="image/*"
+        />
+      </div>
+
+      <!-- Programmatic API: open the picker from your own code. -->
+      <div class="card">
+        <label>Programmatic — <code>openFileManager()</code></label>
+        <div class="row">
+          <button id="prog" type="button" class="app">Pick an image…</button>
+        </div>
+        <pre id="out">// the resolved url appears here</pre>
+      </div>
+    </main>
+
+    <!-- The shared modal instance. One per page; `hidden` until opened. -->
+    <file-manager endpoint="/api" hidden></file-manager>
+
+    <!--
+      USAGE MODE (a) — with npm + a bundler (Vite, webpack, esbuild, …):
+
+        npm install @charlie404/filemanager
+
+        import {
+          FileManager,
+          bindFileManagers,
+          openFileManager,
+        } from '@charlie404/filemanager'
+
+        FileManager.register('file-manager', { endpoint: '/api' })
+        bindFileManagers()
+
+      USAGE MODE (b) — plain <script type="module">, no build step (used below).
+      We import the built bundle directly. `api.php` serves it at /dist/index.js,
+      so the relative path ../../dist/index.js resolves to that route.
+    -->
+    <script type="module">
+      import {
+        FileManager,
+        bindFileManagers,
+        openFileManager,
+      } from '../../dist/index.js'
+
+      // 1. Register the custom element + the global endpoint.
+      FileManager.register('file-manager', { endpoint: '/api' })
+
+      // 2. Wire every data-filemanager* field on the page.
+      bindFileManagers()
+
+      // 3. Drive the picker programmatically.
+      const out = document.querySelector('#out')
+      document.querySelector('#prog').addEventListener('click', async () => {
+        try {
+          const url = await openFileManager({ accept: 'image/*' })
+          out.textContent = `openFileManager() resolved:\n${url}`
+        } catch {
+          out.textContent = '// cancelled'
+        }
+      })
+    </script>
+  </body>
+</html>

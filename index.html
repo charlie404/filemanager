@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@charlie404/filemanager — demo</title>
+    <style>
+      :root {
+        --color-base-100: #ffffff;
+        --color-base-200: #f6f6f8;
+        --color-base-300: #e8e8ee;
+        --color-base-content: #1f2430;
+        --color-primary: #2563eb;
+        --color-primary-content: #ffffff;
+        --color-error: #dc2626;
+        --radius-box: 0.9rem;
+        --radius-field: 0.5rem;
+        color-scheme: light;
+      }
+      /* Fake daisyUI themes to prove the token bridge (ADR 0002). */
+      html[data-theme='dim'] {
+        --color-base-100: #2a303c;
+        --color-base-200: #242933;
+        --color-base-300: #20252e;
+        --color-base-content: #b2ccd6;
+        --color-primary: #6d28d9;
+        --color-primary-content: #ffffff;
+        --color-error: #ef4444;
+        color-scheme: dark;
+      }
+      html[data-theme='emerald'] {
+        --color-base-100: #ffffff;
+        --color-base-200: #f1f5f4;
+        --color-base-300: #e2e8e6;
+        --color-base-content: #1c2b26;
+        --color-primary: #10b981;
+        --color-primary-content: #ffffff;
+        color-scheme: light;
+      }
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        background: var(--color-base-200);
+        color: var(--color-base-content);
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 5rem;
+      }
+      h1 {
+        font-size: 1.3rem;
+      }
+      .card {
+        background: var(--color-base-100);
+        border: 1px solid var(--color-base-300);
+        border-radius: var(--radius-box);
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+      }
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        font-size: 0.9rem;
+      }
+      input[type='text'],
+      input[type='hidden'] + * {
+        font: inherit;
+      }
+      .row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      .field-input {
+        flex: 1;
+        padding: 0.5rem 0.7rem;
+        border: 1px solid var(--color-base-300);
+        border-radius: var(--radius-field);
+        background: var(--color-base-100);
+        color: inherit;
+      }
+      button.app {
+        font: inherit;
+        padding: 0.5rem 0.8rem;
+        border: 1px solid var(--color-base-300);
+        border-radius: var(--radius-field);
+        background: var(--color-primary);
+        color: var(--color-primary-content);
+        cursor: pointer;
+      }
+      .themes {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+      }
+      .themes button {
+        font: inherit;
+        padding: 0.3rem 0.6rem;
+        border-radius: var(--radius-field);
+        border: 1px solid var(--color-base-300);
+        background: var(--color-base-100);
+        color: inherit;
+        cursor: pointer;
+      }
+      code {
+        background: var(--color-base-300);
+        padding: 0.1rem 0.3rem;
+        border-radius: 4px;
+        font-size: 0.85em;
+      }
+      pre {
+        background: var(--color-base-300);
+        padding: 0.6rem;
+        border-radius: var(--radius-field);
+        overflow: auto;
+        font-size: 0.8rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>@charlie404/filemanager</h1>
+
+      <div class="card">
+        <label>Theme (simulated daisyUI <code>data-theme</code>)</label>
+        <div class="themes">
+          <button onclick="document.documentElement.removeAttribute('data-theme')">
+            light (default)
+          </button>
+          <button onclick="document.documentElement.dataset.theme='emerald'">emerald</button>
+          <button onclick="document.documentElement.dataset.theme='dim'">dim (dark)</button>
+        </div>
+        <p style="font-size: 0.85rem; opacity: 0.7">
+          The file manager should adopt these colours automatically.
+        </p>
+      </div>
+
+      <div class="card">
+        <label for="image">Single image field — <code>data-filemanager</code></label>
+        <div class="row">
+          <input
+            id="image"
+            class="field-input"
+            type="text"
+            name="image"
+            data-filemanager
+            data-filemanager-accept="image/*"
+            data-filemanager-crop-ratio="16:9"
+            data-filemanager-alt-target="#image-alt"
+            placeholder="No image selected"
+          />
+        </div>
+        <label for="image-alt" style="margin-top: 0.6rem">Alt (auto-filled on select)</label>
+        <input id="image-alt" class="field-input" type="text" name="image_alt" />
+      </div>
+
+      <div class="card">
+        <label>Gallery — <code>data-filemanager-multiple</code> (submits <code>gallery[]</code>)</label>
+        <input type="hidden" name="gallery" data-filemanager data-filemanager-multiple data-filemanager-accept="image/*" />
+      </div>
+
+      <div class="card">
+        <label for="legacy">Legacy Grafikart trigger — <code>data-open-file-manager</code></label>
+        <div class="row">
+          <input id="legacy" class="field-input" type="text" name="legacy" placeholder="…" />
+          <button type="button" class="app" data-open-file-manager="#legacy">Browse</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <label>Programmatic API + manage mode</label>
+        <div class="row" style="gap: 0.6rem; flex-wrap: wrap">
+          <button id="prog" type="button" class="app">openFileManager()</button>
+          <button type="button" class="app" data-open-file-manager>Open library (manage)</button>
+          <button id="fr" type="button" class="app">Ouvrir en français 🇫🇷</button>
+        </div>
+        <pre id="out">// selection appears here</pre>
+      </div>
+    </main>
+
+    <file-manager endpoint="/api" hidden></file-manager>
+    <script type="module" src="/src/dev.ts"></script>
+  </body>
+</html>

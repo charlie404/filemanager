@@ -1,0 +1,53 @@
+{
+  "name": "@charlie404/filemanager",
+  "version": "0.1.0",
+  "description": "Framework-agnostic file manager custom element with server-side image cropping, metadata editing and automatic theme adaptation (daisyUI bridge).",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "custom-elements",
+    "web-components",
+    "file-manager",
+    "media-library",
+    "image-cropper",
+    "cropperjs",
+    "lit",
+    "symfony",
+    "laravel"
+  ],
+  "author": "Charlie Bitan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/charlie404/filemanager"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "preview": "vite preview",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "format": "prettier --write \"src/**/*.ts\" \"*.{ts,html,json}\""
+  },
+  "dependencies": {
+    "cropperjs": "^1.6.2",
+    "lit": "^3.2.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7"
+  }
+}

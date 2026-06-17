@@ -1,0 +1,60 @@
+{#
+  Partial du gestionnaire de fichiers @charlie404/filemanager.
+
+  À inclure une fois par page utilisant la médiathèque :
+    {{ include('_filemanager.html.twig') }}
+
+  L'instance <file-manager> est un singleton (modale partagée). L'attribut
+  `endpoint` pointe vers la route du contrôleur Symfony ; `hidden` l'empêche
+  de s'afficher tant qu'aucun champ ne l'ouvre.
+
+  Côté JS, bindFileManagers() (voir assets/filemanager.js) enrichit
+  automatiquement chaque champ `data-filemanager` :
+    - champ simple  : un bouton « Parcourir » est injecté juste après l'input ;
+                      l'input reçoit l'URL du fichier choisi.
+    - champ multiple : ajouter `data-filemanager-multiple` ; le champ devient une
+                       galerie de vignettes et soumet des entrées répétées `name[]`.
+#}
+
+{# Instance partagée : placée une seule fois, réutilisée par tous les champs. #}
+<file-manager endpoint="{{ path('admin.fileManager.index') }}" hidden></file-manager>
+
+{#
+  Champ « image unique » : un input texte qui reçoit l'URL choisie. Le bouton
+  « Parcourir » est ajouté automatiquement par bindFileManagers().
+  `data-filemanager-accept` filtre la sélection ; `data-filemanager-alt-target`
+  (optionnel) recopie le `alt` du média dans un autre champ.
+#}
+<div class="form-group">
+  <label for="hero_image">Image principale</label>
+  <input
+    type="text"
+    id="hero_image"
+    name="hero_image"
+    data-filemanager
+    data-filemanager-accept="image/*"
+    data-filemanager-alt-target="#hero_image_alt"
+    placeholder="/uploads/media/…"
+    value="{{ hero_image|default('') }}"
+  >
+  <input type="text" id="hero_image_alt" name="hero_image_alt" placeholder="Texte alternatif">
+</div>
+
+{#
+  Champ « galerie » (sélection multiple) : même input, avec
+  `data-filemanager-multiple`. bindFileManagers() le transforme en galerie de
+  vignettes ; chaque média sélectionné est soumis sous `gallery[]`. La valeur
+  initiale peut être pré-remplie par une liste d'URLs séparées par des retours
+  à la ligne.
+#}
+<div class="form-group">
+  <label>Galerie</label>
+  <input
+    type="text"
+    name="gallery"
+    data-filemanager
+    data-filemanager-multiple
+    data-filemanager-accept="image/*"
+    value="{{ gallery|default([])|join('\n') }}"
+  >
+</div>

@@ -1,0 +1,14 @@
+# Extrait à fusionner dans votre config/services.yaml.
+# Câble la racine de stockage et l'URL publique du service FileManagerStorage.
+#
+# Avec l'autowiring/autoconfigure par défaut de Symfony, le contrôleur et le
+# service sont découverts automatiquement via App\: ; il suffit d'injecter les
+# deux arguments scalaires de FileManagerStorage.
+
+services:
+  App\Service\FileManagerStorage:
+    arguments:
+      # Racine de stockage sur disque (créée automatiquement si absente).
+      $root: '%kernel.project_dir%/public/uploads/media'
+      # Préfixe d'URL publique correspondant à cette racine.
+      $baseUrl: '/uploads/media'
