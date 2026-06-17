@@ -4,5 +4,6 @@ dist
 *.local
 test-results
 playwright-report
+.playwright-cli
 server/uploads
 .pw-browsers
