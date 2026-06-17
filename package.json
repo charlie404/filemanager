@@ -26,15 +26,23 @@
     "symfony",
     "laravel"
   ],
-  "author": "Charlie Bitan",
+  "author": "Charlie404",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/charlie404/filemanager"
+    "url": "git+https://github.com/charlie404/filemanager.git"
+  },
+  "homepage": "https://github.com/charlie404/filemanager#readme",
+  "bugs": {
+    "url": "https://github.com/charlie404/filemanager/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "vite build && tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
     "preview": "vite preview",
     "test": "playwright test",
     "test:headed": "playwright test --headed",

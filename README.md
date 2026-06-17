@@ -85,13 +85,13 @@ The chosen File's `url` is written into the input and `input`/`change` events ar
 <input type="hidden" id="cover-alt" name="cover_alt" />
 ```
 
-| Attribute | Purpose |
-| --- | --- |
-| `data-filemanager` | Marks the field; renders a browse button after it. |
-| `data-filemanager-accept` | Mime/extension filter passed to the picker (e.g. `image/*`, `.jpg,.png`). |
-| `data-filemanager-crop-ratio` | Constrains the crop editor (`"16:9"`, `"1:1"`, a number, or `"free"`). |
+| Attribute                     | Purpose                                                                            |
+| ----------------------------- | ---------------------------------------------------------------------------------- |
+| `data-filemanager`            | Marks the field; renders a browse button after it.                                 |
+| `data-filemanager-accept`     | Mime/extension filter passed to the picker (e.g. `image/*`, `.jpg,.png`).          |
+| `data-filemanager-crop-ratio` | Constrains the crop editor (`"16:9"`, `"1:1"`, a number, or `"free"`).             |
 | `data-filemanager-alt-target` | CSS selector of another input; the chosen File's `alt` Metadata is copied into it. |
-| `data-filemanager-multiple` | Switches the field to multiple mode (see below). Value-less. |
+| `data-filemanager-multiple`   | Switches the field to multiple mode (see below). Value-less.                       |
 
 **Multiple selection.** Add `data-filemanager-multiple`. The original input is converted to
 `type="hidden"` and stops submitting; the picker opens in multiple mode and each chosen File
@@ -101,7 +101,14 @@ therefore submits a repeated **`name[]`** array (the `[]` suffix is added automa
 chips on load.
 
 ```html
-<input type="text" name="gallery" value="" data-filemanager data-filemanager-multiple data-filemanager-accept="image/*" />
+<input
+  type="text"
+  name="gallery"
+  value=""
+  data-filemanager
+  data-filemanager-multiple
+  data-filemanager-accept="image/*"
+/>
 <!-- submits gallery[]=…&gallery[]=… -->
 ```
 
@@ -117,16 +124,16 @@ The original Grafikart trigger keeps working:
 <button type="button" data-open-file-manager>Manage media</button>
 ```
 
-`accept` / `crop-ratio` are read from the *target* input's `data-filemanager-*` attributes, so
+`accept` / `crop-ratio` are read from the _target_ input's `data-filemanager-*` attributes, so
 existing markup needs no changes.
 
 ### Programmatic
 
 ```js
 import {
-  openFileManager,       // → Promise<string>      (resolves the chosen File's url)
-  openFileManagerFile,   // → Promise<FileItem>     (resolves the full File, single)
-  openFileManagerFiles,  // → Promise<FileItem[]>   (resolves all chosen Files, multiple)
+  openFileManager, // → Promise<string>      (resolves the chosen File's url)
+  openFileManagerFile, // → Promise<FileItem>     (resolves the full File, single)
+  openFileManagerFiles, // → Promise<FileItem[]>   (resolves all chosen Files, multiple)
 } from '@charlie404/filemanager'
 
 // Drop-in for a visual-editor `onBrowse: (url?) => Promise<string>` field:
@@ -150,8 +157,8 @@ compatibility) plus `detail.files` (the full **Selection** as `FileItem[]`).
 const el = document.querySelector('file-manager')
 
 el.addEventListener('selectfile', (e) => {
-  console.log(e.detail.url)          // string — first File's url
-  console.log(e.detail.files)        // FileItem[] — full selection with meta
+  console.log(e.detail.url) // string — first File's url
+  console.log(e.detail.files) // FileItem[] — full selection with meta
 })
 
 el.addEventListener('close', () => {
@@ -166,16 +173,16 @@ You can also drive the element directly via its methods: `el.show(options)`, `el
 
 ### Element attributes (`<file-manager …>`)
 
-| Attribute | Type | Default | Description |
-| --- | --- | --- | --- |
-| `endpoint` | string | `''` | Base URL of the REST contract (falls back to the `register()` endpoint). |
-| `layout` | `grid` \| `rows` | `grid` | Initial file listing layout. |
-| `readonly` | boolean | `false` | Hide all mutating actions (upload, delete, rename, crop, new folder, drag). |
-| `multiple` | boolean | `false` | Allow choosing several Files. |
-| `accept` | string | `''` | Mime/extension filter, e.g. `image/*` or `.jpg,.png`. |
-| `crop-ratio` | string \| number | `''` | Constrain the crop editor: `"16:9"`, `"1:1"`, a number, or `"free"`. |
-| `theme` | `auto` \| `light` \| `dark` | `auto` | `auto` bridges daisyUI / `prefers-color-scheme`; `light` / `dark` force a look. |
-| `lang` | `en` \| `fr` | `en` | UI language (also settable globally via `register({ lang })`). |
+| Attribute    | Type                        | Default | Description                                                                     |
+| ------------ | --------------------------- | ------- | ------------------------------------------------------------------------------- |
+| `endpoint`   | string                      | `''`    | Base URL of the REST contract (falls back to the `register()` endpoint).        |
+| `layout`     | `grid` \| `rows`            | `grid`  | Initial file listing layout.                                                    |
+| `readonly`   | boolean                     | `false` | Hide all mutating actions (upload, delete, rename, crop, new folder, drag).     |
+| `multiple`   | boolean                     | `false` | Allow choosing several Files.                                                   |
+| `accept`     | string                      | `''`    | Mime/extension filter, e.g. `image/*` or `.jpg,.png`.                           |
+| `crop-ratio` | string \| number            | `''`    | Constrain the crop editor: `"16:9"`, `"1:1"`, a number, or `"free"`.            |
+| `theme`      | `auto` \| `light` \| `dark` | `auto`  | `auto` bridges daisyUI / `prefers-color-scheme`; `light` / `dark` force a look. |
+| `lang`       | `en` \| `fr`                | `en`    | UI language (also settable globally via `register({ lang })`).                  |
 
 ### Per-open options (`OpenOptions`)
 
@@ -191,7 +198,7 @@ el.show({ accept: 'image/*', multiple: true, cropRatio: '16:9' })
 
 Internally the element only uses its own `--fm-*` custom properties, each defined as a daisyUI
 token with a hard-coded fallback, e.g. `--fm-surface: var(--color-base-100, #fff)`. Because CSS
-custom properties inherit *across* the Shadow DOM boundary:
+custom properties inherit _across_ the Shadow DOM boundary:
 
 - **Inside a daisyUI app**, the element automatically adopts whatever `data-theme` is active on
   `<html>` — no wiring needed.
@@ -221,18 +228,18 @@ mirrored by `examples/{symfony,laravel,vanilla}`.
 
 ### Endpoints
 
-| Method & path | Body / query | Returns | Purpose |
-| --- | --- | --- | --- |
-| `GET /folders` | — | `Folder[]` | List all folders (the navigation tree). |
-| `POST /folders` | `{ name, parent }` | `Folder` | Create a folder. |
-| `PUT /folders/{id}` | `{ name }` | `Folder` | Rename a folder. |
-| `DELETE /folders/{id}` | — | `204` | Delete a folder (recursively). |
-| `GET /files` | `?folder={id}` | `FileItem[]` | List Files in a folder (root if omitted). |
-| `POST /files` | multipart: `file`, `folder` | `FileItem` | Upload a File. |
-| `POST /files/move` | `{ from, to }` | `FileItem` | Move a File to another folder. |
-| `POST /files/crop` | `CropParams` | `FileItem` | Produce a **Derivative** (a new cropped File). |
-| `PUT /files/{id}` | `{ name?, meta? }` | `FileItem` | Rename and/or update Metadata. |
-| `DELETE /files/{id}` | — | `204` | Delete a File. |
+| Method & path          | Body / query                | Returns      | Purpose                                        |
+| ---------------------- | --------------------------- | ------------ | ---------------------------------------------- |
+| `GET /folders`         | —                           | `Folder[]`   | List all folders (the navigation tree).        |
+| `POST /folders`        | `{ name, parent }`          | `Folder`     | Create a folder.                               |
+| `PUT /folders/{id}`    | `{ name }`                  | `Folder`     | Rename a folder.                               |
+| `DELETE /folders/{id}` | —                           | `204`        | Delete a folder (recursively).                 |
+| `GET /files`           | `?folder={id}`              | `FileItem[]` | List Files in a folder (root if omitted).      |
+| `POST /files`          | multipart: `file`, `folder` | `FileItem`   | Upload a File.                                 |
+| `POST /files/move`     | `{ from, to }`              | `FileItem`   | Move a File to another folder.                 |
+| `POST /files/crop`     | `CropParams`                | `FileItem`   | Produce a **Derivative** (a new cropped File). |
+| `PUT /files/{id}`      | `{ name?, meta? }`          | `FileItem`   | Rename and/or update Metadata.                 |
+| `DELETE /files/{id}`   | —                           | `204`        | Delete a File.                                 |
 
 `{id}` is the File or Folder's path under the storage root (e.g. `products/2024/photo.jpg`).
 Errors return a JSON `{ "error": "…" }` with a `4xx` status.
@@ -265,9 +272,9 @@ image; the server writes a Derivative beside the source and returns it as a `Fil
 {
   "source": "products/photo.jpg",
   "crop": { "x": 120, "y": 80, "width": 800, "height": 450 },
-  "format": "webp",     // optional: "jpeg" | "png" | "webp" — omit to keep source format
-  "quality": 0.82,      // optional: 0..1 for lossy formats
-  "maxWidth": 1600       // optional: downscale so output width never exceeds this
+  "format": "webp", // optional: "jpeg" | "png" | "webp" — omit to keep source format
+  "quality": 0.82, // optional: 0..1 for lossy formats
+  "maxWidth": 1600, // optional: downscale so output width never exceeds this
 }
 ```
 
@@ -286,7 +293,7 @@ import { FileManager } from '@charlie404/filemanager'
 
 FileManager.register('file-manager', {
   endpoint: '/admin/file-manager',
-  headers: { 'X-CSRF-Token': csrf },     // sent on every request
+  headers: { 'X-CSRF-Token': csrf }, // sent on every request
   credentials: 'same-origin',
   api: {
     // override only what differs; everything else uses the REST contract
@@ -344,4 +351,4 @@ The shared vocabulary and the recorded design decisions:
 
 ## License
 
-MIT © Charlie Bitan
+MIT © Charlie404
