@@ -32,6 +32,14 @@ implemented per host against a small documented contract (reference servers unde
 - **Organise** — nested folders; **drag one or several files onto a folder** to move them, or
   **onto “New folder”** to create one on the fly and drop them in; rename, delete (incl. bulk
   selection), search, sort, grid/rows layouts.
+- **Collapsible folder tree** — the sidebar tree folds per folder (chevrons) and **opens fully
+  collapsed**, so deep hierarchies stay tidy; opening a folder expands it, and the **New folder**
+  action stays pinned at the top of the sidebar while the tree scrolls. The new-folder prompt
+  shows which folder it will be created in.
+- **Opens in context** — when a field already holds a File, the picker opens **straight into that
+  File's folder**, expanding the tree down to it. Declarative fields do this automatically; for
+  programmatic opens, pass the current value as the new `path` option (see
+  [Opening in the right folder](#opening-in-the-right-folder-path)).
 - **Drag-and-drop upload** — drop files to upload, or **drop a whole folder from Finder/Explorer**
   to import its contents recursively, recreating the subfolder structure and stepping into it.
 - **Themed dialogs** — confirm/prompt render inside the element (no native `alert`/`confirm`),
@@ -71,6 +79,8 @@ instance tag, and binds once the DOM is ready.)
 
 Add `data-filemanager` to any text input to turn it into a media field with a browse button.
 The chosen File's `url` is written into the input and `input`/`change` events are dispatched.
+**When the input already holds a url, the picker opens directly in that File's folder** — this is
+automatic, no extra attribute or code.
 
 ```html
 <!-- Single value: writes the chosen url into this input -->
@@ -125,7 +135,8 @@ The original Grafikart trigger keeps working:
 ```
 
 `accept` / `crop-ratio` are read from the _target_ input's `data-filemanager-*` attributes, so
-existing markup needs no changes.
+existing markup needs no changes. The trigger also opens in the **target input's current value**
+folder, exactly like the declarative fields above.
 
 ### Programmatic
 
@@ -142,6 +153,9 @@ const url = await openFileManager({ accept: 'image/*', cropRatio: '1:1' })
 // Multiple selection:
 const files = await openFileManagerFiles({ accept: 'image/*' })
 files.forEach((f) => console.log(f.url, f.meta.alt))
+
+// Open straight into the folder of a File the field already holds:
+const url = await openFileManager({ accept: 'image/*', path: input.value })
 ```
 
 All three open the **shared singleton instance** (created lazily if the page didn't place a
@@ -186,13 +200,43 @@ You can also drive the element directly via its methods: `el.show(options)`, `el
 
 ### Per-open options (`OpenOptions`)
 
-`accept`, `multiple`, and `cropRatio` can also be passed per call — to `el.show(options)` or to
-`openFileManager*(options)`. Because there is a single shared instance, these are **applied on
-open and reset on close**, so each invocation starts clean:
+`accept`, `multiple`, `cropRatio`, and `path` can also be passed per call — to `el.show(options)`
+or to `openFileManager*(options)`. Because there is a single shared instance, these are **applied
+on open and reset on close**, so each invocation starts clean:
 
 ```js
 el.show({ accept: 'image/*', multiple: true, cropRatio: '16:9' })
 ```
+
+| Option      | Type             | Effect                                                                                |
+| ----------- | ---------------- | ------------------------------------------------------------------------------------- |
+| `accept`    | string           | Mime/extension filter for the picker (`image/*`, `.jpg,.png`).                        |
+| `multiple`  | boolean          | Allow choosing several Files.                                                         |
+| `cropRatio` | string \| number | Constrain the crop editor (`"16:9"`, `"1:1"`, a number, `"free"`).                    |
+| `path`      | string           | A file url/path the field already holds; the picker **opens in that File's folder**.  |
+
+#### Opening in the right folder (`path`)
+
+Pass the field's current value as `path` and the picker opens straight into the folder that holds
+it, with the tree expanded down to that folder and the folder selected. Resolution is
+**prefix-agnostic** — it matches the deepest **Folder** whose `id` is a suffix of the url's
+directory, so it works whether your urls look like `/uploads/…`, `/uploads/media/…`, or absolute
+CDN urls; if nothing matches it falls back to the root.
+
+The declarative `data-filemanager` fields and `data-open-file-manager` triggers **already do this
+for you** — no change needed. The only place to wire it yourself is a **programmatic** integration
+that opens the picker with a value already in hand — e.g. a visual-editor image field. Forward the
+url it gives you as `path`:
+
+```js
+// @charlie404/visual-editor (or any `onBrowse: (url?) => Promise<string>` field):
+//   before: onBrowse: () => openFileManager({ accept: 'image/*' })
+//   after:  forward the current url so the picker lands in its folder
+onBrowse: (url) => openFileManager({ accept: 'image/*', path: url })
+```
+
+Everything else is backward-compatible: omit `path` and the picker opens at the root with a
+fully-collapsed tree, as before.
 
 ## Theming
 
@@ -348,6 +392,10 @@ The shared vocabulary and the recorded design decisions:
   tokens through the Shadow DOM, with a `prefers-color-scheme` fallback.
 - **[ADR 0003](docs/adr/0003-js-only-per-host-contract-no-bundle.md)** — JS-only distribution with
   a per-host REST contract (no Symfony bundle); the contract is the product surface.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the release history and what changed between versions.
 
 ## License
 

@@ -88,6 +88,8 @@ export interface OpenOptions {
   multiple?: boolean
   /** `"16:9"`, `"1:1"`, a number, or `"free"`. Constrains the crop editor. */
   cropRatio?: string | number
+  /** A file URL/path already held by the host field; opens straight into its Folder. */
+  path?: string
 }
 
 /**

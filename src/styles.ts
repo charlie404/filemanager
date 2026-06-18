@@ -142,9 +142,20 @@ export const elementStyles = css`
   .sidebar {
     flex: 0 0 220px;
     overflow: auto;
-    padding: 0.5rem;
     border-right: 1px solid var(--fm-border);
     background: var(--fm-surface);
+  }
+  /* sticky action bar: full-bleed bottom border, mirroring the main toolbar */
+  .sidebar-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 0.5rem;
+    background: var(--fm-surface);
+    border-bottom: 1px solid var(--fm-border);
+  }
+  .sidebar-body {
+    padding: 0.5rem;
   }
   .main {
     flex: 1 1 auto;
@@ -204,6 +215,37 @@ export const elementStyles = css`
   .tree button[aria-current='true'] {
     background: var(--fm-primary);
     color: var(--fm-primary-fg);
+  }
+  .tree .twisty {
+    flex: 0 0 auto;
+    display: inline-grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    margin: -2px 0;
+    border-radius: 4px;
+    opacity: 0.55;
+    transition:
+      transform 0.15s ease,
+      opacity 0.1s,
+      background 0.1s;
+  }
+  .tree .twisty:hover {
+    opacity: 1;
+    background: color-mix(in oklab, currentColor 16%, transparent);
+  }
+  .tree .twisty[aria-expanded='true'] {
+    transform: rotate(90deg);
+  }
+  .tree .twisty-spacer {
+    flex: 0 0 auto;
+    width: 16px;
+  }
+
+  /* sidebar "New folder" action, pinned in the sticky head above the tree */
+  .sidebar .newfolder {
+    width: 100%;
+    justify-content: flex-start;
   }
   .tree .drop,
   .btn.drop {
@@ -625,6 +667,11 @@ export const elementStyles = css`
     margin: 0;
     font-size: 0.98rem;
     font-weight: 600;
+  }
+  .dialog-box h3 .dialog-sub {
+    margin-left: 0.4rem;
+    font-weight: 400;
+    color: var(--fm-muted);
   }
   .dialog-box p {
     margin: 0;

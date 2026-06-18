@@ -33,6 +33,8 @@ type Pane = null | 'crop' | 'meta'
 interface DialogState {
   kind: 'confirm' | 'prompt'
   title: string
+  /** Muted text shown next to the title on the same line (e.g. the parent folder). */
+  subtitle?: string
   message?: string
   value: string
   danger?: boolean
@@ -64,6 +66,7 @@ export class FileManager extends LitElement {
   @state() private folders: Folder[] = []
   @state() private files: FileItem[] = []
   @state() private currentFolder: string | null = null
+  @state() private collapsed = new Set<string>()
   @state() private selected = new Set<string>()
   @state() private loading = false
   @state() private uploading = false
@@ -121,7 +124,60 @@ export class FileManager extends LitElement {
     this.error = ''
     this.open = true
     this.hidden = false
-    if (!this.loaded) void this.load()
+    void this.openFromValue(options.path)
+  }
+
+  /**
+   * Each open starts from a fully-collapsed tree at the root. When the host field
+   * already holds a file (its `path`), step straight into that file's Folder and
+   * reveal its ancestor chain in the tree.
+   */
+  private async openFromValue(path?: string): Promise<void> {
+    if (!this.loaded) await this.load()
+    this.collapseAll()
+    const target = path ? this.folderForPath(path) : null
+    if (target) this.expandAncestors(target)
+    if (target !== this.currentFolder) await this.openFolder(target)
+  }
+
+  /** Collapse every Folder that has children — the default on each open. */
+  private collapseAll(): void {
+    this.collapsed = new Set(
+      this.folders.map((f) => f.parent).filter((p): p is string => !!p),
+    )
+  }
+
+  /** Expand a Folder and all its ancestors, so a deep path becomes visible. */
+  private expandAncestors(id: string): void {
+    const next = new Set(this.collapsed)
+    let cur: string | null = id
+    while (cur) {
+      next.delete(cur)
+      cur = this.folders.find((f) => f.id === cur)?.parent ?? null
+    }
+    this.collapsed = next
+  }
+
+  /**
+   * Resolve the Folder id that holds a given file URL/path (or null for the root).
+   * Matches the deepest Folder id that is a suffix of the URL's directory, so it
+   * works regardless of the host's upload-path prefix.
+   */
+  private folderForPath(value: string): string | null {
+    let dir = value
+    try {
+      dir = decodeURIComponent(new URL(value, location.href).pathname)
+    } catch {
+      /* not a URL; treat the value as a raw path */
+    }
+    dir = dir.replace(/\/[^/]*$/, '') // drop the filename, keep the directory
+    let best: string | null = null
+    for (const f of this.folders) {
+      if ((dir === f.id || dir.endsWith('/' + f.id)) && (!best || f.id.length > best.length)) {
+        best = f.id
+      }
+    }
+    return best
   }
 
   /** Close the manager and emit `close`. */
@@ -157,11 +213,12 @@ export class FileManager extends LitElement {
     })
   }
 
-  private promptDialog(title: string, value = ''): Promise<string | null> {
+  private promptDialog(title: string, value = '', subtitle?: string): Promise<string | null> {
     return new Promise((resolve) => {
       this.dialog = {
         kind: 'prompt',
         title,
+        subtitle,
         value,
         resolve: (r) => resolve(typeof r === 'string' ? r : null),
       }
@@ -203,6 +260,12 @@ export class FileManager extends LitElement {
 
   private async openFolder(id: string | null): Promise<void> {
     this.currentFolder = id
+    // opening a folder also expands it in the tree, so its children come into view
+    if (id && this.collapsed.has(id)) {
+      const next = new Set(this.collapsed)
+      next.delete(id)
+      this.collapsed = next
+    }
     this.selected = new Set()
     this.loading = true
     await this.reloadFiles()
@@ -283,7 +346,11 @@ export class FileManager extends LitElement {
   }
 
   private async createFolder(): Promise<void> {
-    const name = await this.promptDialog(this.dict.newFolder)
+    const name = await this.promptDialog(
+      this.dict.newFolder,
+      '',
+      this.dict.newFolderIn(this.currentFolderName),
+    )
     if (!name) return
     const folder = await this.api.createFolder({ name, parent: this.currentFolder })
     this.folders = await this.api.getFolders()
@@ -548,7 +615,11 @@ export class FileManager extends LitElement {
   private async onNewFolderDrop(): Promise<void> {
     const files = this.takeDragged()
     if (!files.length) return
-    const name = await this.promptDialog(this.dict.newFolderPrompt)
+    const name = await this.promptDialog(
+      this.dict.newFolderPrompt,
+      '',
+      this.dict.newFolderIn(this.currentFolderName),
+    )
     if (!name) return
     this.loading = true
     const folder = await this.api.createFolder({ name, parent: this.currentFolder })
@@ -570,6 +641,13 @@ export class FileManager extends LitElement {
       if (dir === 'date') return (b.mtime ?? 0) - (a.mtime ?? 0)
       return a.name.localeCompare(b.name)
     })
+  }
+
+  /** Display name of the folder a new item would land in (root → the "Home" label). */
+  private get currentFolderName(): string {
+    return this.currentFolder
+      ? (this.folders.find((f) => f.id === this.currentFolder)?.name ?? this.dict.root)
+      : this.dict.root
   }
 
   private get breadcrumb(): Folder[] {
@@ -635,7 +713,11 @@ export class FileManager extends LitElement {
         @keydown=${(e: KeyboardEvent) => e.key === 'Escape' && cancel()}
       >
         <div class="dialog-box" role="alertdialog" aria-modal="true" aria-label=${d.title}>
-          <h3>${d.title}</h3>
+          <h3>
+            ${d.title}${d.subtitle
+              ? html`<span class="dialog-sub">${d.subtitle}</span>`
+              : nothing}
+          </h3>
           ${d.message ? html`<p>${d.message}</p>` : nothing}
           ${d.kind === 'prompt'
             ? html`<input
@@ -702,38 +784,42 @@ export class FileManager extends LitElement {
     const roots = this.folders.filter((f) => !f.parent)
     return html`
       <aside class="sidebar">
-        <ul class="tree">
-          <li>
-            <button
-              aria-current=${this.currentFolder === null}
-              @click=${() => this.openFolder(null)}
-              @dragover=${(e: DragEvent) => (e.preventDefault(), this.markDrop(e, true))}
-              @dragleave=${(e: DragEvent) => this.markDrop(e, false)}
-              @drop=${(e: DragEvent) => (this.markDrop(e, false), this.onFolderDrop(null))}
-            >
-              ${icons.home(16)} ${this.dict.root}
-            </button>
-          </li>
-          ${roots.map((f) => this.renderFolderNode(f, 0))}
-        </ul>
         ${this.readonly
           ? nothing
-          : html`<button
-              class="btn ghost"
-              style="width:100%;justify-content:flex-start;margin-top:.4rem"
-              @click=${this.createFolder}
-              @dragover=${(e: DragEvent) => (e.preventDefault(), this.markDrop(e, true))}
-              @dragleave=${(e: DragEvent) => this.markDrop(e, false)}
-              @drop=${(e: DragEvent) => (this.markDrop(e, false), this.onNewFolderDrop())}
-            >
-              ${icons.folderPlus(16)} ${this.dict.newFolder}
-            </button>`}
+          : html`<div class="sidebar-head">
+              <button
+                class="btn ghost newfolder"
+                @click=${this.createFolder}
+                @dragover=${(e: DragEvent) => (e.preventDefault(), this.markDrop(e, true))}
+                @dragleave=${(e: DragEvent) => this.markDrop(e, false)}
+                @drop=${(e: DragEvent) => (this.markDrop(e, false), this.onNewFolderDrop())}
+              >
+                ${icons.folderPlus(16)} ${this.dict.newFolder}
+              </button>
+            </div>`}
+        <div class="sidebar-body">
+          <ul class="tree">
+            <li>
+              <button
+                aria-current=${this.currentFolder === null}
+                @click=${() => this.openFolder(null)}
+                @dragover=${(e: DragEvent) => (e.preventDefault(), this.markDrop(e, true))}
+                @dragleave=${(e: DragEvent) => this.markDrop(e, false)}
+                @drop=${(e: DragEvent) => (this.markDrop(e, false), this.onFolderDrop(null))}
+              >
+                ${icons.home(16)} ${this.dict.root}
+              </button>
+            </li>
+            ${roots.map((f) => this.renderFolderNode(f, 0))}
+          </ul>
+        </div>
       </aside>
     `
   }
 
   private renderFolderNode(folder: Folder, depth: number): TemplateResult {
     const children = this.folders.filter((f) => f.parent === folder.id)
+    const expanded = children.length > 0 && !this.collapsed.has(folder.id)
     return html`
       <li>
         <button
@@ -744,6 +830,16 @@ export class FileManager extends LitElement {
           @dragleave=${(e: DragEvent) => this.markDrop(e, false)}
           @drop=${(e: DragEvent) => (this.markDrop(e, false), this.onFolderDrop(folder))}
         >
+          ${children.length
+            ? html`<span
+                class="twisty"
+                role="button"
+                aria-expanded=${expanded}
+                title=${expanded ? this.dict.collapse : this.dict.expand}
+                @click=${(e: Event) => (e.stopPropagation(), this.toggleCollapse(folder.id))}
+                >${icons.chevronRight(13)}</span
+              >`
+            : html`<span class="twisty-spacer"></span>`}
           ${icons.folder(16)}
           <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${folder.name}</span>
           ${this.readonly
@@ -757,13 +853,19 @@ export class FileManager extends LitElement {
                 >${icons.trash(13)}</span
               >`}
         </button>
-        ${children.length
+        ${expanded
           ? html`<ul class="tree">
               ${children.map((c) => this.renderFolderNode(c, depth + 1))}
             </ul>`
           : nothing}
       </li>
     `
+  }
+
+  private toggleCollapse(id: string): void {
+    const next = new Set(this.collapsed)
+    next.has(id) ? next.delete(id) : next.add(id)
+    this.collapsed = next
   }
 
   private markDrop(e: DragEvent, on: boolean): void {

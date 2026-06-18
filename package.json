@@ -1,6 +1,6 @@
 {
   "name": "@charlie404/filemanager",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Framework-agnostic file manager custom element with server-side image cropping, metadata editing and automatic theme adaptation (daisyUI bridge).",
   "type": "module",
   "main": "dist/index.js",
@@ -13,7 +13,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "keywords": [
     "custom-elements",

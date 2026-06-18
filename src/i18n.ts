@@ -5,6 +5,7 @@ export interface Dict {
   upload: string
   newFolder: string
   newFolderPrompt: string
+  newFolderIn: (folder: string) => string
   search: string
   empty: string
   emptyHint: string
@@ -32,6 +33,8 @@ export interface Dict {
   sortSize: string
   layoutGrid: string
   layoutRows: string
+  collapse: string
+  expand: string
   // crop editor
   cropTitle: string
   ratioFree: string
@@ -56,6 +59,7 @@ const en: Dict = {
   upload: 'Upload',
   newFolder: 'New folder',
   newFolderPrompt: 'Folder name',
+  newFolderIn: (folder) => `in “${folder}”`,
   search: 'Search…',
   empty: 'This folder is empty',
   emptyHint: 'Drop files here or use the Upload button',
@@ -83,6 +87,8 @@ const en: Dict = {
   sortSize: 'Size',
   layoutGrid: 'Grid',
   layoutRows: 'List',
+  collapse: 'Collapse',
+  expand: 'Expand',
   cropTitle: 'Crop image',
   ratioFree: 'Free',
   apply: 'Apply crop',
@@ -104,6 +110,7 @@ const fr: Dict = {
   upload: 'Téléverser',
   newFolder: 'Nouveau dossier',
   newFolderPrompt: 'Nom du dossier',
+  newFolderIn: (folder) => `dans « ${folder} »`,
   search: 'Rechercher…',
   empty: 'Ce dossier est vide',
   emptyHint: 'Déposez des fichiers ici ou utilisez le bouton Téléverser',
@@ -131,6 +138,8 @@ const fr: Dict = {
   sortSize: 'Taille',
   layoutGrid: 'Grille',
   layoutRows: 'Liste',
+  collapse: 'Réduire',
+  expand: 'Développer',
   cropTitle: "Recadrer l'image",
   ratioFree: 'Libre',
   apply: 'Appliquer',

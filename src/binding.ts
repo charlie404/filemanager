@@ -96,7 +96,7 @@ function enhanceSingle(input: HTMLInputElement): void {
   input.insertAdjacentElement('afterend', btn)
   btn.addEventListener('click', async () => {
     try {
-      const file = await openFileManagerFile(readOpts(input))
+      const file = await openFileManagerFile({ ...readOpts(input), path: input.value || undefined })
       input.value = file.url
       dispatchChange(input)
       const altSel = input.dataset.filemanagerAltTarget
@@ -185,6 +185,7 @@ function enhanceLegacyTrigger(btn: HTMLElement): void {
       const file = await openFileManagerFile({
         accept: target?.dataset.filemanagerAccept,
         cropRatio: target?.dataset.filemanagerCropRatio,
+        path: target?.value || undefined,
       })
       if (target) {
         target.value = file.url
