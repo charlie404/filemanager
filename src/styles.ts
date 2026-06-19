@@ -171,6 +171,12 @@ export const elementStyles = css`
     border-bottom: 1px solid var(--fm-border);
     flex-wrap: wrap;
   }
+  /* a native <select> renders ~2px taller than a .btn for the same padding, which
+     made the toolbar taller than the sidebar "New folder" row and offset their
+     bottom borders — trim a pixel so the controls (and the two borders) line up */
+  .toolbar select.input {
+    padding-block: calc(0.4rem - 1px);
+  }
   .content {
     position: relative;
     flex: 1 1 auto;
@@ -240,6 +246,29 @@ export const elementStyles = css`
   .tree .twisty-spacer {
     flex: 0 0 auto;
     width: 16px;
+  }
+  /* the folder name takes the remaining width and middle-truncates inside it */
+  .tree fm-trunc {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  /* delete action — only rendered on the active folder (see renderFolderNode) */
+  .tree .del {
+    flex: 0 0 auto;
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    margin: -2px -2px -2px 0;
+    border-radius: 4px;
+    opacity: 0.65;
+    transition:
+      opacity 0.1s,
+      background 0.1s;
+  }
+  .tree .del:hover {
+    opacity: 1;
+    background: color-mix(in oklab, currentColor 18%, transparent);
   }
 
   /* sidebar "New folder" action, pinned in the sticky head above the tree */
@@ -559,9 +588,25 @@ export const elementStyles = css`
     gap: 0.2rem;
     font-size: 0.85rem;
     color: var(--fm-muted);
-    flex-wrap: wrap;
+    /* stay on one line: take the toolbar's free width and scroll horizontally
+       (auto-scrolled to the current folder) instead of wrapping */
+    flex: 1 1 0;
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+  .breadcrumb::-webkit-scrollbar {
+    display: none;
+  }
+  /* keep the chevron separators from being squeezed to nothing when the trail
+     overflows (the buttons don't shrink, so all shrink pressure lands on these) */
+  .breadcrumb > svg {
+    flex: 0 0 auto;
   }
   .breadcrumb button {
+    flex: 0 0 auto;
     border: 0;
     background: transparent;
     color: inherit;
@@ -573,6 +618,14 @@ export const elementStyles = css`
   .breadcrumb button:hover {
     background: var(--fm-hover);
     color: var(--fm-fg);
+  }
+  /* cap each segment so a long folder name middle-truncates instead of stretching
+     the toolbar (same treatment as the sidebar). inline-block so it sizes to its
+     own content up to the cap, rather than collapsing inside the shrink-to-fit button */
+  .breadcrumb fm-trunc {
+    display: inline-block;
+    max-width: 13rem;
+    vertical-align: middle;
   }
 
   /* crop + meta panels share the .pane overlay inside the modal */

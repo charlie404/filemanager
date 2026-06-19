@@ -7,6 +7,7 @@ import { resolveDict, type Dict } from './i18n'
 import { acceptMatches, formatBytes, isImage } from './utils'
 import { fileGlyph } from './filetypes'
 import './crop'
+import './trunc'
 import type { CropApplyDetail } from './crop'
 import type {
   FileItem,
@@ -86,6 +87,8 @@ export class FileManager extends LitElement {
   private dict!: Dict
   private loaded = false
   private dragFileIds: string[] = []
+  private breadcrumbRO?: ResizeObserver
+  private observedBreadcrumb: Element | null = null
 
   override connectedCallback(): void {
     super.connectedCallback()
@@ -701,6 +704,32 @@ export class FileManager extends LitElement {
     if (changed.has('dialog') && this.dialog?.kind === 'prompt') {
       this.renderRoot.querySelector<HTMLInputElement>('.dialog-box input')?.focus()
     }
+    // keep the current folder (the trail's tail) in view: on navigation, and — via a
+    // ResizeObserver re-attached whenever the breadcrumb is (re)created — on resize.
+    const bc = this.renderRoot.querySelector('.breadcrumb')
+    if (bc && bc !== this.observedBreadcrumb) {
+      this.breadcrumbRO?.disconnect()
+      this.breadcrumbRO ??= new ResizeObserver(() => this.scrollBreadcrumbToEnd())
+      this.breadcrumbRO.observe(bc)
+      this.observedBreadcrumb = bc
+    }
+    if (changed.has('currentFolder')) this.scrollBreadcrumbToEnd()
+  }
+
+  override disconnectedCallback(): void {
+    this.breadcrumbRO?.disconnect()
+    this.breadcrumbRO = undefined
+    this.observedBreadcrumb = null
+    super.disconnectedCallback()
+  }
+
+  private scrollBreadcrumbToEnd(): void {
+    // defer one frame: the <fm-trunc> segments render in their own update cycle, so
+    // the breadcrumb's scrollWidth isn't final until after the next microtask flush
+    requestAnimationFrame(() => {
+      const bc = this.renderRoot.querySelector('.breadcrumb')
+      if (bc) bc.scrollLeft = bc.scrollWidth
+    })
   }
 
   private renderDialog(d: DialogState): TemplateResult {
@@ -825,6 +854,7 @@ export class FileManager extends LitElement {
         <button
           style="padding-left:${0.5 + depth * 0.85}rem"
           aria-current=${this.currentFolder === folder.id}
+          aria-label=${folder.name}
           @click=${() => this.openFolder(folder.id)}
           @dragover=${(e: DragEvent) => (e.preventDefault(), this.markDrop(e, true))}
           @dragleave=${(e: DragEvent) => this.markDrop(e, false)}
@@ -841,15 +871,22 @@ export class FileManager extends LitElement {
               >`
             : html`<span class="twisty-spacer"></span>`}
           ${icons.folder(16)}
-          <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${folder.name}</span>
-          ${this.readonly
+          <fm-trunc class="name" .text=${folder.name}></fm-trunc>
+          ${this.readonly || this.currentFolder !== folder.id
             ? nothing
             : html`<span
                 class="del"
                 role="button"
+                tabindex="0"
                 title=${this.dict.delete}
                 @click=${(e: Event) => (e.stopPropagation(), this.deleteFolder(folder))}
-                style="opacity:.5"
+                @keydown=${(e: KeyboardEvent) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    this.deleteFolder(folder)
+                  }
+                }}
                 >${icons.trash(13)}</span
               >`}
         </button>
@@ -881,10 +918,11 @@ export class FileManager extends LitElement {
           <button @click=${() => this.openFolder(null)}>${this.dict.root}</button>
           ${trail.map(
             (f) => html`${icons.chevronRight(13)}
-              <button @click=${() => this.openFolder(f.id)}>${f.name}</button>`,
+              <button aria-label=${f.name} @click=${() => this.openFolder(f.id)}>
+                <fm-trunc .text=${f.name}></fm-trunc>
+              </button>`,
           )}
         </div>
-        <span class="spacer"></span>
         <select
           class="input"
           style="width:auto"

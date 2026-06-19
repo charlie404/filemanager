@@ -35,7 +35,10 @@ implemented per host against a small documented contract (reference servers unde
 - **Collapsible folder tree** — the sidebar tree folds per folder (chevrons) and **opens fully
   collapsed**, so deep hierarchies stay tidy; opening a folder expands it, and the **New folder**
   action stays pinned at the top of the sidebar while the tree scrolls. The new-folder prompt
-  shows which folder it will be created in.
+  shows which folder it will be created in. Long folder names **truncate with a middle ellipsis**
+  (macOS Finder style; full name on hover / as the accessible label) instead of wrapping, and the
+  **delete** action shows only on the active folder. The breadcrumb likewise stays on a single line,
+  scrolling to the current folder rather than wrapping.
 - **Opens in context** — when a field already holds a File, the picker opens **straight into that
   File's folder**, expanding the tree down to it. Declarative fields do this automatically; for
   programmatic opens, pass the current value as the new `path` option (see

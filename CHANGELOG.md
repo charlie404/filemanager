@@ -12,6 +12,25 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-19
+
+### Changed
+
+- **Sidebar folder names** now stay on one line and use a **middle ellipsis** (macOS Finder style)
+  when they overflow — the start and end of the name stay readable instead of wrapping. The cut
+  point re-measures on resize, and the full name is available as a hover tooltip / accessible label.
+- **The breadcrumb** no longer wraps to multiple lines: it stays on a single line and scrolls
+  horizontally (kept scrolled to the current folder), and any individual segment that is too long
+  middle-truncates the same way as the sidebar.
+- The **delete-folder** button in the tree is now shown **only on the active folder** (and never on
+  Home), keeping the sidebar uncluttered; it is now keyboard-operable (focusable, activates on
+  Enter / Space).
+
+### Fixed
+
+- The main toolbar and the sidebar **New folder** bar now line up: a native `<select>` rendered a
+  couple of pixels taller than the buttons, which offset the two bottom borders.
+
 ## [0.2.0] - 2026-06-18
 
 ### Added

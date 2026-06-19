@@ -67,8 +67,10 @@ function dndDispatch(arg: { sourceSel: string; targetText: string }): void {
   const root = (document.querySelector('file-manager') as unknown as { shadowRoot: ShadowRoot })
     .shadowRoot
   const source = root.querySelector(arg.sourceSel)!
+  // folder names now render inside <fm-trunc> (shadow DOM), so the button text is
+  // empty — match the button's aria-label (full name), falling back to textContent.
   const target = [...root.querySelectorAll('.sidebar button, .tree button')].find((b) =>
-    new RegExp(arg.targetText, 'i').test(b.textContent || ''),
+    new RegExp(arg.targetText, 'i').test(b.getAttribute('aria-label') || b.textContent || ''),
   )!
   const dt = new DataTransfer()
   const fire = (el: Element, type: string) =>
@@ -103,7 +105,7 @@ test('dragging several selected files shows a count badge and moves them all', a
       .shadowRoot
     const item = root.querySelector('.item')!
     const products = [...root.querySelectorAll('.tree button')].find((b) =>
-      /products/i.test(b.textContent || ''),
+      /products/i.test(b.getAttribute('aria-label') || b.textContent || ''),
     )!
     const dt = new DataTransfer()
     const fire = (el: Element, t: string) =>
@@ -132,7 +134,7 @@ test('dropping a file on "New folder" creates a folder and moves it in', async (
     .poll(async () => (await (await fetch(`${API}/api/folders`)).json()).length, { timeout: 6000 })
     .toBe(foldersBefore.length + 1)
   // and we are now INSIDE the new folder, which holds the dropped file
-  await expect(fm.locator('.breadcrumb')).toContainText(/dropped-set/)
+  await expect(fm.locator('.breadcrumb').getByRole('button', { name: /dropped-set/ })).toBeVisible()
   await expect(fm.locator('.item')).toHaveCount(1)
 })
 
@@ -190,7 +192,9 @@ test('dropping a Finder folder imports its files recursively (structure preserve
   const subFiles = await (await fetch(`${API}/api/files?folder=${sub.id}`)).json()
   expect(subFiles.length).toBe(1)
   // and the manager stepped into the imported folder
-  await expect(fm.locator('.breadcrumb')).toContainText(/imported-album/)
+  await expect(
+    fm.locator('.breadcrumb').getByRole('button', { name: /imported-album/ }),
+  ).toBeVisible()
 })
 
 test('creating a folder via the button steps into it', async ({ page }) => {
@@ -199,7 +203,7 @@ test('creating a folder via the button steps into it', async ({ page }) => {
   await fm.getByRole('button', { name: /New folder/ }).click()
   await fm.locator('.dialog-box input').fill('fresh-folder')
   await fm.locator('.dialog-box').getByRole('button', { name: 'Confirm' }).click()
-  await expect(fm.locator('.breadcrumb')).toContainText(/fresh-folder/)
+  await expect(fm.locator('.breadcrumb').getByRole('button', { name: /fresh-folder/ })).toBeVisible()
   await expect(fm.getByText('This folder is empty')).toBeVisible()
 })
 

@@ -11,6 +11,7 @@
 export { FileManager } from './FileManager'
 export type { RegisterOptions } from './FileManager'
 export { FmCrop } from './crop'
+export { FmTrunc } from './trunc'
 export { createRestApi } from './api'
 export type { RestApiOptions } from './api'
 export {
